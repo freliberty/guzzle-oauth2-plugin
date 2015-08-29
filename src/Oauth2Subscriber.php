@@ -8,6 +8,7 @@ use GuzzleHttp\Event\BeforeEvent;
 use GuzzleHttp\Event\ErrorEvent;
 use GuzzleHttp\Event\RequestEvents;
 use GuzzleHttp\Event\SubscriberInterface;
+use Doctrine\Common\Cache\Cache;
 
 class Oauth2Subscriber implements SubscriberInterface
 {
@@ -22,6 +23,8 @@ class Oauth2Subscriber implements SubscriberInterface
     /** @var RefreshTokenGrantTypeInterface */
     protected $refreshTokenGrantType;
 
+    /** @var  Cache */
+    protected $cache;
     /**
      * Create a new Oauth2 subscriber.
      *
@@ -54,7 +57,7 @@ class Oauth2Subscriber implements SubscriberInterface
         if ($response && 401 == $response->getStatusCode()) {
             $request = $event->getRequest();
             if ($request->getConfig()->get('auth') == 'oauth2' && !$request->getConfig()->get('retried')) {
-                if ($token = $this->acquireAccessToken()) {
+                if ($token = $this->acquireAccessToken(true)) {
                     $this->accessToken = $token;
                     $request->getConfig()->set('retried', true);
                     $event->intercept($event->getClient()->send($request));
@@ -66,9 +69,11 @@ class Oauth2Subscriber implements SubscriberInterface
     /**
      * Get a new access token.
      *
+     * @param bool $forcecache
+     *
      * @return AccessToken|null
      */
-    protected function acquireAccessToken()
+    protected function acquireAccessToken($forcecache = false)
     {
         $accessToken = null;
 
@@ -78,13 +83,13 @@ class Oauth2Subscriber implements SubscriberInterface
                 $this->refreshTokenGrantType->setRefreshToken($this->refreshToken->getToken());
             }
             if ($this->refreshTokenGrantType->hasRefreshToken()) {
-                $accessToken = $this->refreshTokenGrantType->getToken();
+                $accessToken = $this->refreshTokenGrantType->getToken($forcecache);
             }
         }
 
         if (!$accessToken && $this->grantType) {
             // Get a new access token.
-            $accessToken = $this->grantType->getToken();
+            $accessToken = $this->grantType->getToken($forcecache);
         }
 
         return $accessToken ?: null;
@@ -169,5 +174,21 @@ class Oauth2Subscriber implements SubscriberInterface
             throw new \InvalidArgumentException('Invalid refresh token');
         }
         $this->refreshToken = $refreshToken;
+    }
+
+    /**
+     * @param Cache $cache
+     */
+    public function setCache(Cache $cache)
+    {
+        $this->cache = $cache;
+
+        if (null !== $this->grantType) {
+            $this->grantType->setCache($cache);
+        }
+
+        if (null !== $this->refreshTokenGrantType) {
+            $this->refreshTokenGrantType->setCache($cache);
+        }
     }
 }
