@@ -178,7 +178,7 @@ class Oauth2Subscriber implements SubscriberInterface
     }
 
     /**
-     * @param $cache Doctrine cache instance
+     * @param \Doctrine\Common\Cache\Cache $cache Doctrine cache instance
      *
      * @throws \InvalidArgumentException
      */

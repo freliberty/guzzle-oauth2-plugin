@@ -47,6 +47,14 @@ abstract class GrantTypeBase implements GrantTypeInterface
     }
 
     /**
+     * @return mixed \Doctrine\Common\Cache\Cache|null
+     */
+    public function getCache()
+    {
+        return $this->cache;
+    }
+
+    /**
      * Get default configuration items.
      *
      * @return array
