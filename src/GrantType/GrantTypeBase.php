@@ -5,7 +5,7 @@ namespace CommerceGuys\Guzzle\Oauth2\GrantType;
 use CommerceGuys\Guzzle\Oauth2\AccessToken;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Collection;
-use Doctrine\Common\Cache\Cache;
+
 
 abstract class GrantTypeBase implements GrantTypeInterface
 {
@@ -18,7 +18,7 @@ abstract class GrantTypeBase implements GrantTypeInterface
     /** @var string */
     protected $grantType = '';
 
-    /** @var  Cache */
+    /** @var  \Doctrine\Common\Cache\Cache */
     protected $cache;
 
     /**
@@ -32,10 +32,17 @@ abstract class GrantTypeBase implements GrantTypeInterface
     }
 
     /**
-     * @param Cache $cache
+     * @param \Doctrine\Common\Cache\Cache $cache
+     * @return void
+     *
+     * @throws \InvalidArgumentException
      */
-    public function setCache(Cache $cache)
+    public function setCache($cache)
     {
+        if (!$cache instanceof \Doctrine\Common\Cache\Cache) {
+            throw new \InvalidArgumentException('Provided cache must implement Doctrine Cache interface');
+        }
+
         $this->cache = $cache;
     }
 
@@ -86,25 +93,16 @@ abstract class GrantTypeBase implements GrantTypeInterface
         if ($this->cache) {
             $key = $this->getCacheKey($config);
 
-            if ($forcecache || !$data = $this->cache->fetch($key)) { //cache missed
-
-                $data = $this->getTokenDatas($config);
+            if ($forcecache || !$data = $this->cache->fetch($key)) { //cache miss
 
                 $lifetime = 0;
+                $data     = $this->getTokenDatas($config);
                 if (isset($data['expires'])) {
                     $lifetime = (int) $data['expires'] - time();
                     unset($data['expires']);
                 } elseif (isset($data['expires_in'])) {
                     $lifetime = (int) $data['expires_in'];
                     unset($data['expires_in']);
-                }
-
-                if ($lifetime > 0) { //we remove 2sec on lifetime to be sure that cache is invalidated before
-                    $lifetime -=2;
-                }
-
-                if ($lifetime < 0) { //lifetime can't be negative
-                    $lifetime = 0;
                 }
 
                 $this->cache->save($key, serialize($data), $lifetime);
@@ -161,7 +159,7 @@ abstract class GrantTypeBase implements GrantTypeInterface
         $token_ident = sha1($this->client->getBaseUrl() . '_' . $config['client_id']);
 
         $key = sprintf(
-            'cg_actk_%s_%s',
+            'cg_acesstoken_%s_%s',
             $this->grantType,
             $token_ident
         );

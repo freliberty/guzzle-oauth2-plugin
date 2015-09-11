@@ -25,6 +25,7 @@ class Oauth2Subscriber implements SubscriberInterface
 
     /** @var  Cache */
     protected $cache;
+
     /**
      * Create a new Oauth2 subscriber.
      *
@@ -177,10 +178,16 @@ class Oauth2Subscriber implements SubscriberInterface
     }
 
     /**
-     * @param Cache $cache
+     * @param $cache Doctrine cache instance
+     *
+     * @throws \InvalidArgumentException
      */
-    public function setCache(Cache $cache)
+    public function setCache($cache)
     {
+        if (!$cache instanceof \Doctrine\Common\Cache\Cache) {
+            throw new \InvalidArgumentException('Provided cache must implement Doctrine Cache interface');
+        }
+
         $this->cache = $cache;
 
         if (null !== $this->grantType) {

@@ -3,7 +3,7 @@
 namespace CommerceGuys\Guzzle\Oauth2\GrantType;
 
 use CommerceGuys\Guzzle\Oauth2\AccessToken;
-use Doctrine\Common\Cache\Cache;
+
 
 interface GrantTypeInterface
 {
@@ -17,9 +17,9 @@ interface GrantTypeInterface
     public function getToken($forcecache = false);
 
     /**
-     * @param Cache $cache
+     * @param $cache
      *
      * @return mixed
      */
-    public function setCache(Cache $cache);
+    public function setCache($cache);
 }
