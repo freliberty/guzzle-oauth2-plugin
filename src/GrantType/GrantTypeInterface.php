@@ -10,11 +10,9 @@ interface GrantTypeInterface
     /**
      * Get the token data returned by the OAuth2 server.
      *
-     * @param bool $forcecache
-     *
      * @return AccessToken
      */
-    public function getToken($forcecache = false);
+    public function getToken();
 
     /**
      * @param $cache

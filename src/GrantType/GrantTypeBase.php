@@ -90,18 +90,16 @@ abstract class GrantTypeBase implements GrantTypeInterface
     }
 
     /**
-     * @param bool|false $forcecache
-     *
      * @return AccessToken
      */
-    public function getToken($forcecache = false)
+    public function getToken()
     {
         $config = $this->config->toArray();
 
         if ($this->cache) {
             $key = $this->getCacheKey($config);
 
-            if ($forcecache || !$data = $this->cache->fetch($key)) { //cache miss
+            if (!$data = $this->cache->fetch($key)) { //cache miss
 
                 $lifetime = 0;
                 $data     = $this->getTokenDatas($config);
@@ -164,12 +162,12 @@ abstract class GrantTypeBase implements GrantTypeInterface
     protected function getCacheKey($config)
     {
 
-        $token_ident = sha1($this->client->getBaseUrl() . '_' . $config['client_id']);
+        $tokenIdent = sha1($this->client->getBaseUrl() . '_' . $config['client_id']);
 
         $key = sprintf(
             'cg_acesstoken_%s_%s',
             $this->grantType,
-            $token_ident
+            $tokenIdent
         );
 
         return $key;
